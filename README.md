@@ -96,6 +96,3 @@ To monitor and analyze the ecosystem's dynamics, the model collects the followin
 - **Energy Metrics**: Distribution of energy levels across agent types can also be visualized to show health and sustainability.
 
 
-## **Conclusion**
-
-The **Wolf-Sheep-Hunter Ecosystem Model** demonstrates the complexity of interactions in an ecosystem where multiple types of agents are present. It captures the predator-prey dynamics extended by **human intervention** in the form of hunters. Each agent has its parameters and behaviors, and the model tracks various metrics to provide insight into how the ecosystem evolves over time. By altering parameters such as **reproduction rates**, **perception radius**, **initial population sizes**, or **grass regrowth time**, users can observe different emergent behaviors and equilibrium states of the ecosystem, gaining insight into the factors that govern balance in natural systems.
