@@ -1,17 +1,64 @@
-import random
-from IPython import display
-from ipywidgets import widgets
+from matplotlib import pyplot as plt
 import mesa
+import geopandas as gpd
+import random
+from shapely.geometry import box
+from shapely.ops import unary_union
+from mesa.visualization.ModularVisualization import ModularServer
+from mesa.visualization.modules import CanvasGrid, ChartModule
+from mesa.visualization.UserParam import Slider
+from mesa.time import RandomActivation
 from mesa.space import MultiGrid
-import seaborn as sns
-import numpy as np
-import pandas as pd
-#from mesa.visualization.modules import CanvasGrid, ChartModule
-#from mesa.visualization.ModularVisualization import ModularServer
-import matplotlib.pyplot as plt
-from mesa.experimental import JupyterViz
-from mesa.experimental import make_text
-import solara
+from matplotlib import pyplot as plt
+from shapely.geometry import Point
+from mesa.visualization.modules import TextElement
+
+
+# Load the shapefile for valid grid cells
+shapefile_path = 'shp/output/GRID.shp'  # Path to your valid shapefile
+grid = gpd.read_file(shapefile_path)
+
+
+shapefile_path = '/Users/alexdebertolis/Desktop/MASTestSim/shp/output/GRID.shp'  # Path to your valid shapefile
+def visualize_model(model):
+    # Get the positions of each type of agent
+    hunter_positions = [(agent.pos[0], agent.pos[1]) for agent in model.schedule.agents if isinstance(agent, Hunter) and agent.pos]
+    wolf_positions = [(agent.pos[0], agent.pos[1]) for agent in model.schedule.agents if isinstance(agent, Wolf) and agent.pos]
+    sheep_positions = [(agent.pos[0], agent.pos[1]) for agent in model.schedule.agents if isinstance(agent, Sheep) and agent.pos]
+
+    # Plotting the shapefile outline
+    fig, ax = plt.subplots(figsize=(10, 10))
+    grid.boundary.plot(ax=ax, color='black', linewidth=1)
+
+    # Plot hunter positions if they exist
+    if hunter_positions:
+        hx, hy = zip(*hunter_positions)
+        plt.scatter(hx, hy, c='blue', label='Hunters', s=50)
+
+    if wolf_positions:
+        wx, wy = zip(*wolf_positions)
+        plt.scatter(wx, wy, c='red', label='Wolves', s=50)
+
+    if sheep_positions:
+        sx, sy = zip(*sheep_positions)
+        plt.scatter(sx, sy, c='green', label='Sheep', s=50)
+
+    # Add titles and labels
+    plt.title("Agent Positions in the Grid with Boundaries")
+    plt.xlabel("X Coordinate")
+    plt.ylabel("Y Coordinate")
+
+    # Adding the legend
+    plt.legend(loc='upper right', title="Agent Types")
+
+    # Save the figure as a static image
+    plt.savefig("agent_positions_with_boundaries.png")
+
+    # Show the plot
+    try:
+        plt.show()
+    except Exception as e:
+        print(f"Could not display the plot interactively: {e}")
 
 def manhattan_distance(pos1, pos2):
     x1, y1 = pos1
@@ -19,68 +66,146 @@ def manhattan_distance(pos1, pos2):
     return abs(x1 - x2) + abs(y1 - y2)
 
 def agent_portrayal(agent):
-    size = 10
-    color = "gray"  # Default color for unknown agent type
-    shape = "rect"
-
-    if isinstance(agent, Sheep):
-        size = 20
-        color = "green" if agent.energy > 5 else "tab:olive"  # Represent sheep differently depending on energy
-    elif isinstance(agent, Wolf):
-        size = 30
-        color = "red" if agent.energy > 5 else "tab:orange"  # Represent wolves differently based on energy level
+    
+        
+    if isinstance(agent, Wolf):
+        return {
+            "Shape": "circle",
+            "Color": "red",
+            "Filled": "true",
+            "r": 0.5,
+            "Layer": 2
+        }
+    elif isinstance(agent, Sheep):
+        return {
+            "Shape": "circle",
+            "Color": "green",
+            "Filled": "true",
+            "r": 0.5,
+            "Layer": 3
+        }
     elif isinstance(agent, Hunter):
-        size = 40
-        color = "blue"  # Hunters have a fixed color representation
-    """elif isinstance(agent, GrassPatch):
+        return {
+            "Shape": "rect",
+            "Color": "blue",
+            "Filled": "true",
+            "w": 0.6,
+            "h": 0.6,
+            "Layer": 4
+        }
+    else: 
+    
+        return {
+            "Shape": "rect",
+            "Filled": "true",
+            "Color": "#CCCCCC",  # Light gray color for empty cells
+            "Layer": 0,
+            "w": 1,
+            "h": 1,
+            "stroke_color": "black",  # Border color for grid cells
+            "stroke_width": 0.5       # Border thickness
+        }
+    
+    # No portrayal for grass to avoid clutter
+    return None
+
+def grass_portrayal(agent):
+    if isinstance(agent, GrassPatch):
         if agent.fully_grown:
-            size=20
-            color ="green"
-            shape="rect"
-
+            return {
+                "Shape": "rect",
+                "Color": "green",
+                "Filled": "true",
+                "Layer": 0,
+                "w": 1,
+                "h": 1
+            }
         else:
-            size=20
-            color ="brown"
-            shape="rect"""""
+            return {
+                "Shape": "rect",
+                "Color": "brown",
+                "Filled": "true",
+                "Layer": 0,
+                "w": 1,
+                "h": 1
+            }
+    return None
 
-    return {"size": size, "color": color, "shape" : shape}
-"""def agent_portrayal(agent):
-   
-    # Default portrayal, in case no conditions match
-    portrayal = {
-        "Shape": "circle",
-        "Color": "red",
-        "Filled": "true",
-        "Layer": 1,
-        "r": 0.5
-    }
 
-    # Assign portrayal based on agent type
-    if isinstance(agent, Sheep):
-        portrayal = {"Shape": "circle", "Color": "white", "Filled": "true", "Layer": 1, "r": 0.5}
-    elif isinstance(agent, Wolf):
-        portrayal = {"Shape": "circle", "Color": "red", "Filled": "true", "Layer": 1, "r": 0.5}
-    elif isinstance(agent, Hunter):
-        portrayal = {"Shape": "rect", "Color": "black", "Filled": "true", "Layer": 1, "w": 0.8, "h": 0.8}
-    elif isinstance(agent, GrassPatch):
-        if agent.fully_grown:
-            portrayal = {"Shape": "rect",
-                         "Color": "green",
-                         "Filled": "true",
-                         "Layer": 0,
-                         "w": 1,
-                         "h": 1}
+
+class ShapefileGrid(mesa.space.MultiGrid):
+    def __init__(self, valid_cells_gdf, width, height):
+        # Initialize the MultiGrid class to inherit the grid behavior
+        super().__init__(width, height, torus=False)
+        
+        self.valid_cells = valid_cells_gdf
+        # Calculate grid bounds and set width/height properties for visualization
+        self.minx, self.miny, self.maxx, self.maxy = self.valid_cells.total_bounds
+        self.width = width
+        self.height = height
+
+        # Create a mapping of cell centroids for easier agent placement
+        self.centroids = self.valid_cells.geometry.centroid
+        self.valid_coords = [(int((p.x - self.minx) // 10000), int((p.y - self.miny) // 10000)) for p in self.centroids]
+        # Ensure each position is within the grid bounds
+        self.valid_coords = [(x, y) for x, y in self.valid_coords if 0 <= x < self.width and 0 <= y < self.height]
+
+    def get_random_valid_cell(self):
+        """Return a random coordinate from the valid cells."""
+        return random.choice(self.valid_coords)
+
+    def is_valid_position(self, position):
+        """Check if a position is within valid cells."""
+        return position in self.valid_coords
+
+    def place_agent(self, agent, position):
+        """Place an agent at the given position."""
+        if self.is_valid_position(position):
+            agent.pos = position
+            # Use the inherited `_grid` placement from MultiGrid
+            self._grid[position[0]][position[1]].append(agent)
+            self._neighborhood_cache.clear()  # Clear neighborhood cache if needed
+
+    def move_agent(self, agent, new_position):
+        """Move agent to a new position if valid."""
+        if agent.pos is not None:
+            # Remove the agent from the current position
+            current_pos = agent.pos
+            if agent in self._grid[current_pos[0]][current_pos[1]]:
+                self._grid[current_pos[0]][current_pos[1]].remove(agent)
+
+        # Update the agent's position and add it to the new position
+        if self.is_valid_position(new_position):
+            agent.pos = new_position
+            self._grid[new_position[0]][new_position[1]].append(agent)
+
+
+
+
+"""
+class ShapefileGrid:
+    def __init__(self, valid_cells_gdf, width, height):
+        self.valid_cells = valid_cells_gdf
+        self.width = width
+        self.height = height
+
+        # Create a mapping of cell centroids for easier agent placement
+        self.centroids = self.valid_cells.geometry.centroid
+        self.valid_coords = [(p.x, p.y) for p in self.centroids]
+
+    def get_random_valid_cell(self):
+        #Return a random coordinate from the valid cells.
+        return random.choice(self.valid_coords)
+
+    def move_agent(self, agent, new_position):
+        #Move agent to a new position if valid
+            agent.pos = new_position
         else:
-            portrayal = {"Shape": "rect",
-                         "Color": "brown",
-                         "Filled": "true",
-                         "Layer": 0,
-                         "w": 1,
-                         "h": 1}
-    return portrayal
-   """
+            print(f"Warning: Attempted to move agent {agent.unique_id} to an invalid cell {new_position}.")
 
 
+
+"""
 
 class Wolf(mesa.Agent):
     def __init__(self,unique_id, model, energy=15, perception_r=3, movement={'step': 2, 'flee': 4},hunger_level=[1, 2, 3, 4, 5], p_reproduction=0.1, energy_gain={'eating_prey': 6}, energy_loss={'step': 1, 'flee': 5}):
@@ -105,32 +230,45 @@ class Wolf(mesa.Agent):
 
     def check_energy(self):
     # Check if the energy level is zero or below
+   
         if self.energy <= 0:
             try:
-                # Safely remove the agent from the grid and scheduler
-                self.model.increase_deaths_by_energy()
-                self.model.grid.remove_agent(self)
-                self.model.schedule.remove(self)
+                # Ensure the agent is still in the grid before removing it
+                if self in self.model.grid.get_cell_list_contents([self.pos]):
+                    # Safely remove the agent from the grid and scheduler
+                    if self in self.model.grid._grid[self.pos[0]][self.pos[1]]:
+                        self.model.grid.remove_agent(self)
+                    else:
+                         print(f"Warning: Agent {self.unique_id} not found in position {self.pos} for removal.")
+                    self.model.schedule.remove(self)
+                    self.model.increase_deaths_by_energy_wolf()
             except KeyError as e:
                 # Handle cases where the agent is already removed or not found
                 print(f"Error while removing agent {self.unique_id}: {e}")
 
-
-
     def feed(self):
-        # Find sheep in the same cell
         if self.pos is None:
-        # Agent is not on the grid; skip reproduction
+            # Agent is not on the grid; skip feeding
             return
+        
         cell_contents = self.model.grid.get_cell_list_contents([self.pos])
         sheep_list = [sheep for sheep in cell_contents if isinstance(sheep, Sheep)]
+        
         if sheep_list:
             sheep = self.random.choice(sheep_list)
-            self.model.grid.remove_agent(sheep)  # Remove the sheep from the grid
-            self.model.schedule.remove(sheep)  # Remove the sheep from the scheduler
+            if sheep in self.model.schedule.agents:
+                self.model.grid.remove_agent(sheep)  # Remove the sheep from the grid
+                try:
+                    self.model.schedule.remove(sheep)  # Remove the sheep from the scheduler
+                except KeyError:
+                    print(f"Warning: Attempted to remove Sheep {sheep.unique_id} from the schedule, but it was not found.")
+            else:
+                print(f"Warning: Sheep {sheep.unique_id} was not in the schedule.")
+            
             self.energy += self.energy_gain['eating_prey']  # Wolf gains energy
             self.model.increase_wolf_kills()
-    
+           
+
     def reproduce(self):
         if self.pos is None:
         # Agent is not on the grid; skip reproduction
@@ -140,7 +278,7 @@ class Wolf(mesa.Agent):
             current_cell = self.model.grid.get_cell_list_contents([self.pos])
             if len(current_cell) == 1:  # Only this wolf is in the cell
                 # Create a new wolf in the same cell
-                newborn = Wolf(self.model.next_id(), self.model, self.energy, self.perception_radius, self.reproduction_prob)
+                newborn = Wolf(self.model.next_id(), self.model, self.energy, self.perception_r, self.p_reproduction)
                 self.model.grid.place_agent(newborn, self.pos)
                 self.model.schedule.add(newborn)
             
@@ -164,7 +302,7 @@ class Wolf(mesa.Agent):
             self.pos,
             moore=True,  # True to include diagonal adjacent cells
             include_center=False,
-            radius=self.perception_r
+            radius=int(self.perception_r)
         )
 
         # Get all agents in these cells
@@ -227,16 +365,21 @@ class Sheep(mesa.Agent):
 
     def check_energy(self):
     # Check if the energy level is zero or below
+     
         if self.energy <= 0:
             try:
-                # Safely remove the agent from the grid and scheduler
-                self.model.increase_deaths_by_energy()
-                self.model.grid.remove_agent(self)
-                self.model.schedule.remove(self)
+                # Ensure the agent is still in the grid before removing it
+                if self in self.model.grid.get_cell_list_contents([self.pos]):
+                    # Safely remove the agent from the grid and scheduler
+                    if self in self.model.grid._grid[self.pos[0]][self.pos[1]]:
+                        self.model.grid.remove_agent(self)
+                    else:
+                        print(f"Warning: Agent {self.unique_id} not found in position {self.pos} for removal.")
+                    self.model.schedule.remove(self)
+                    self.model.increase_deaths_by_energy_sheep()
             except KeyError as e:
                 # Handle cases where the agent is already removed or not found
                 print(f"Error while removing agent {self.unique_id}: {e}")
-
 
 
     def feed(self):
@@ -252,7 +395,7 @@ class Sheep(mesa.Agent):
                 grass.fully_grown = False  # The grass is eaten and no longer fully grown
                 self.energy += self.energy_gain['eating_grass']  # Sheep gains energy
             else:
-                print(f"Sheep {self.unique_id} found no grass to eat.")
+               pass 
         except Exception as e:
             print(f"Error in feeding for Sheep {self.unique_id}: {e}")
 
@@ -265,7 +408,7 @@ class Sheep(mesa.Agent):
             current_cell = self.model.grid.get_cell_list_contents([self.pos])
             if len(current_cell) == 1:  # Only this sheep is in the cell
                 # Create a new sheep in the same cell
-                newborn = Sheep(self.model.next_id(), self.model, self.energy, self.reproduction_prob)
+                newborn = Sheep(self.model.next_id(), self.model, self.energy, self.p_reproduction)
                 self.model.grid.place_agent(newborn, self.pos)
                 self.model.schedule.add(newborn)
 
@@ -289,7 +432,7 @@ class Sheep(mesa.Agent):
             self.pos,
             moore=True,  # True to include diagonal adjacent cells
             include_center=False,
-            radius=self.perception_r
+            radius=int(self.perception_r)
         )
 
         # Get all agents in these cells
@@ -327,64 +470,52 @@ class Sheep(mesa.Agent):
         self.energy -= self.energy_loss["flee"]  # Deduct energy cost for fleeing
 
 class Hunter(mesa.Agent):
-    def __init__(self, unique_id,model, energy=20, perception_r=3, movement={'step': 1}, weapons={'bullet': 10, 'trap': 3}, energy_loss={'step': 1, 'put_trap': 2}):
-        super().__init__(unique_id,model)
+    def __init__(self, unique_id, model, energy=20, perception_r=3, movement={'step': 1}, weapons={'bullet': 10, 'trap': 3}, energy_loss={'step': 1, 'put_trap': 2}):
+        super().__init__(unique_id, model)
         self.energy = energy
         self.perception_r = perception_r
         self.movement = movement
         self.weapons = weapons
-        self.energy_loss = energy_loss  
-        self.removed = False  # Track if the hunter is currently removed
-        self.remove_steps = 0  # Steps since removal 
+        self.energy_loss = energy_loss
 
     def step(self):
         if self.pos is None:
             print(f"Warning: {self.unique_id} has no valid position during step.")
             return
-        if self.removed:
-            self.remove_steps += 1
-            if self.remove_steps >= 2:
-                # Reintegrate the hunter after being removed for two steps
-                self.reintegrate()
-        else:
-            self.move()
-            self.kill_wolf()
-            if random.random() < 0.5:
-                self.set_trap()
-            self.check_energy()
+        
+        self.move()
+        self.kill_wolf()
+        if random.random() < 0.5:
+            self.set_trap()
+        self.check_energy()
 
     def check_energy(self):
         if self.energy <= 0:
-            self.remove_from_simulation()
-            self.model.increase_deaths_by_energy()
+            self.respawn_hunter()
 
-    def remove_from_simulation(self):
-        # Remove the hunter from active agents and mark as removed
-        self.model.grid.remove_agent(self)
-        self.removed = True
-        self.remove_steps = 0  # Reset the count
+    def respawn_hunter(self):
+        # Remove the current hunter from the grid and schedule
+        if self.pos is not None and self in self.model.grid._grid[self.pos[0]][self.pos[1]]:
+            self.model.grid.remove_agent(self)
+        if self in self.model.schedule.agents:
+            self.model.schedule.remove(self)
+        print(f"Hunter {self.unique_id} has died and will be respawned.")
 
-    def reintegrate(self):
-    # Reintegrate the hunter into the simulation
-        self.removed = False
-        self.remove_steps = 0
-        self.energy = 20  # Reset energy or set to some initial value
-        
-        # Place the hunter back on the grid at a random valid location
-        valid_position = False
+        # Create a new hunter to replace the current one
+        new_hunter = Hunter(self.model.next_id(), self.model)
+        # Attempt to find a random valid position
         attempts = 0
-        while not valid_position and attempts < 10:
-            x = self.random.randrange(self.model.grid.width)
-            y = self.random.randrange(self.model.grid.height)
-            if self.model.grid.is_cell_empty((x, y)):
-                valid_position = True
-                self.model.grid.place_agent(self, (x, y))
+        while attempts < 10:
+            x, y = self.model.grid.get_random_valid_cell()
+            if self.model.grid.is_valid_position((x, y)):
+                # Place the hunter in a valid cell
+                self.model.grid.place_agent(new_hunter, (x, y))
+                self.model.schedule.add(new_hunter)
+                print(f"Hunter {new_hunter.unique_id} spawned at position {(x, y)}.")
+                break
             attempts += 1
-        
-        if valid_position:
-            self.model.schedule.add(self)
-        else:
-            print(f"Failed to place hunter {self.unique_id} after {attempts} attempts.")
+        if attempts == 10:
+            print(f"Failed to find a valid position to respawn Hunter {new_hunter.unique_id}.")
 
     def move(self):
         # First, scan for nearby wolves within the perception radius
@@ -392,7 +523,7 @@ class Hunter(mesa.Agent):
             self.pos,
             moore=True,
             include_center=False,
-            radius=self.perception_r
+            radius=int(self.perception_r)
         )
         # Get all agents in these cells
         neighbors = self.model.grid.get_cell_list_contents(neighborhood)
@@ -403,7 +534,7 @@ class Hunter(mesa.Agent):
             min_distance = float('inf')
             closest_wolf = None
             for wolf in wolves:
-                distance = manhattan_distance(self.pos, wolf.pos)  # Replace this with `euclidean_distance` if you prefer
+                distance = manhattan_distance(self.pos, wolf.pos)
                 if distance < min_distance:
                     min_distance = distance
                     closest_wolf = wolf.pos
@@ -425,7 +556,13 @@ class Hunter(mesa.Agent):
             include_center=False,
             radius=radius
         )
-        return self.random.choice(possible_steps)
+
+        if possible_steps:
+            return self.random.choice(possible_steps)
+        else:
+            # No valid moves are available, so the agent stays in place
+            print(f"Warning: Agent {self.unique_id} at {self.pos} has no valid moves.")
+            return self.pos  # Stay in the same position
 
     def move_towards(self, target_pos):
         """Move towards a target position if possible."""
@@ -438,19 +575,18 @@ class Hunter(mesa.Agent):
         best_step = None
         min_distance = float('inf')
         for step in possible_steps:
-            distance = manhattan_distance(step, target_pos)  # Replace this with `euclidean_distance` if you prefer
+            distance = manhattan_distance(step, target_pos)
             if distance < min_distance:
                 min_distance = distance
                 best_step = step
         return best_step
 
-    
     def set_trap(self):
         if self.weapons['trap'] > 0:
             # Place a trap in the current cell
             self.model.grid.place_agent(Trap(self.model.next_id(), self.model), self.pos)
             self.weapons['trap'] -= 1
-            self.energy -= self.energy_loss['put_trap'] 
+            self.energy -= self.energy_loss['put_trap']
 
     def kill_wolf(self):
         # Check for wolves in the same cell
@@ -458,9 +594,11 @@ class Hunter(mesa.Agent):
         wolves = [agent for agent in cellmates if isinstance(agent, Wolf)]
         if wolves and self.weapons['bullet'] > 0:
             wolf_to_kill = self.random.choice(wolves)
-            wolf_to_kill.remove()  # Remove the wolf from the simulation
-            self.weapons['bullet'] -= 1  
+            self.model.grid.remove_agent(wolf_to_kill)  # Remove the wolf from the grid
+            self.model.schedule.remove(wolf_to_kill)  # Remove the wolf from the schedule
+            self.weapons['bullet'] -= 1
             self.model.increase_hunter_kills()
+
 
 class GrassPatch(mesa.Agent):
     """A patch of grass that grows at a fixed rate and it is eaten by sheep."""
@@ -497,71 +635,82 @@ class Trap(mesa.Agent):
             if wolves:
                 wolf_to_catch = self.random.choice(wolves)
                 # Remove the wolf from the simulation
-                self.model.grid._remove_agent(self.pos, wolf_to_catch)
+                if self in self.model.grid._grid[self.pos[0]][self.pos[1]]:
+                    self.model.grid.remove_agent(self)
+                else:
+                    print(f"Warning: Agent {self.unique_id} not found in position {self.pos} for removal.")
                 self.model.schedule.remove(wolf_to_catch)
+
                 # Set the trap as sprung
                 self.sprung = True
                 # Optionally, remove the trap from the grid
-                self.model.grid._remove_agent(self.pos, self)
+                if self in self.model.grid._grid[self.pos[0]][self.pos[1]]:
+                    self.model.grid.remove_agent(self)
+                else:
+                    print(f"Warning: Agent {self.unique_id} not found in position {self.pos} for removal.")
                 self.model.schedule.remove(self)
+                self.model.increase_trap_kills()
         except KeyError as e:
             # Handle any issues related to removing wolves that are already gone
             print(f"Error while springing trap at {self.pos}: {e}")
 
 
+
+
+
 class EcosystemModel(mesa.Model):
     """ A model with some number of agents. """
-    def __init__(self, width, height, initial_grass=True, grass_regrowth_time=10):
+    def __init__(self, num_wolves=15, num_sheep=200, num_hunters=5, initial_grass=True, grass_regrowth_time=10):
         # Properly initialize the parent Model class to inherit necessary functionality
         super().__init__()
-        
-        self.grid = MultiGrid(width, height, True)
-        self.schedule = mesa.time.RandomActivation(self)
-        self.running = True  # Required for the Mesa BatchRunner or Visualization
 
-                # Initialize counters for events
+        # Load the shapefile for valid cells
+        valid_grid_cells = gpd.read_file(shapefile_path)
+        # Calculate width and height for the visualization based on the bounding box of the shapefile
+        minx, miny, maxx, maxy = valid_grid_cells.total_bounds
+        width = int((maxx - minx) // 10000)  # Assuming a 10km cell size
+        height = int((maxy - miny) // 10000)
+
+        # Create the ShapefileGrid instance
+        self.grid = ShapefileGrid(valid_grid_cells, width, height)
+
+        # Initialize agent scheduler
+        self.schedule = RandomActivation(self)
+
+        # Initialize counters for events
         self.wolf_kills = 0
         self.hunter_kills = 0
-        self.deaths_by_energy = 0
-
+        self.deaths_by_energy_wolves = 0
+        self.deaths_by_energy_sheep = 0
+        self.trap_kills = 0
 
         # Create sheep
-        for i in range(150):
+        for i in range(num_sheep):
             sheep = Sheep(self.next_id(), self)
-            x = self.random.randrange(self.grid.width)
-            y = self.random.randrange(self.grid.height)
+            x, y = self.grid.get_random_valid_cell()
             self.grid.place_agent(sheep, (x, y))
-            if not self.grid.is_cell_empty((x, y)):  # Optional: add a check to confirm placement
-                self.schedule.add(sheep)
+            self.schedule.add(sheep)
 
         # Create wolves
-        for i in range(15):
+        for i in range(num_wolves):
             wolf = Wolf(self.next_id(), self)
-          
-            x = self.random.randrange(self.grid.width)
-            y = self.random.randrange(self.grid.height)
+            x, y = self.grid.get_random_valid_cell()
             self.grid.place_agent(wolf, (x, y))
-            if not self.grid.is_cell_empty((x, y)):  # Optional: add a check to confirm placement
-                self.schedule.add(wolf)
+            self.schedule.add(wolf)
 
         # Create hunters
-        for i in range(5):
+        for i in range(num_hunters):
             hunter = Hunter(self.next_id(), self)
-       
-            x = self.random.randrange(self.grid.width)
-            y = self.random.randrange(self.grid.height)
+            x, y = self.grid.get_random_valid_cell()
             self.grid.place_agent(hunter, (x, y))
-            if not self.grid.is_cell_empty((x, y)):  # Optional: add a check to confirm placement
-                self.schedule.add(hunter)
+            self.schedule.add(hunter)
 
         if initial_grass:
-            for (cell, contents) in self.grid.coord_iter():
-                x, y = contents
+            for i, position in enumerate(self.grid.valid_coords):
                 fully_grown = self.random.choice([True, False])
                 grass = GrassPatch(self.next_id(), self, grass_regrowth_time, fully_grown)
-                self.grid.place_agent(grass, (x, y))
-                if not self.grid.is_cell_empty((x, y)):  # Optional: add a check to confirm placement
-                    self.schedule.add(grass)
+                self.grid.place_agent(grass, position)
+                self.schedule.add(grass)
 
         # Create data collector
         self.datacollector = mesa.DataCollector(
@@ -569,13 +718,13 @@ class EcosystemModel(mesa.Model):
                 "Wolves": lambda m: self.count_agents(m, Wolf),
                 "Sheep": lambda m: self.count_agents(m, Sheep),
                 "Hunters": lambda m: self.count_agents(m, Hunter),
-                #"Grass": lambda m: self.count_grass_patches(m)
                 "Wolf Kills": lambda m: m.wolf_kills,
                 "Hunter Kills": lambda m: m.hunter_kills,
-                "Deaths by Energy": lambda m: m.deaths_by_energy,
+                "Deaths by Energy (Wolves)": lambda m: m.deaths_by_energy_wolves,
+                "Deaths by Energy (Sheep)": lambda m: m.deaths_by_energy_sheep,
+                "Trap Kills": lambda m: m.trap_kills,
             }
         )
-
         # Collect initial data
         self.datacollector.collect(self)
 
@@ -589,61 +738,86 @@ class EcosystemModel(mesa.Model):
         count = sum(1 for agent in model.schedule.agents if isinstance(agent, agent_type))
         return count
 
-    @staticmethod
-    def count_grass_patches(model):
-        count = sum(1 for agent in model.schedule.agents if isinstance(agent, GrassPatch) and agent.fully_grown)
-        return count
-    
     def increase_wolf_kills(self):
         self.wolf_kills += 1
 
     def increase_hunter_kills(self):
         self.hunter_kills += 1
 
-    def increase_deaths_by_energy(self):
-        self.deaths_by_energy += 1
+    
+    def increase_deaths_by_energy_wolf(self):
+        self.deaths_by_energy_wolves += 1
+
+    def increase_deaths_by_energy_sheep(self):
+        self.deaths_by_energy_sheep += 1
+
+    def increase_trap_kills(self):
+        self.trap_kills += 1
+    def export_data(self, filename='model_data.csv'):
+        """Export the collected data to a CSV file."""
+        data = self.datacollector.get_model_vars_dataframe()
+        data.to_csv(filename)
+        print(f"Data successfully exported to {filename}")
+
 """
-model = EcosystemModel(width=50, height=50, initial_grass=True, grass_regrowth_time=10)
+model = EcosystemModel( initial_grass=True, grass_regrowth_time=10)
 for i in range(100):
     model.step()
+    visualize_model(model)
 
 # Retrieve the data collected
 data = model.datacollector.get_model_vars_dataframe()
 print(data)
-
-# You can plot the data using matplotlib or seaborn to visualize trends
-import matplotlib.pyplot as plt
-
 data.plot()
 plt.xlabel('Step')
 plt.ylabel('Count')
 plt.title('Population Dynamics')
 plt.show()
-
 """
+class KillCountElement(TextElement):
+    def render(self, model):
+        return (f"Preys Killed by Wolves: {model.wolf_kills}<br>"
+                f"Wolf Killed by Hunters: {model.hunter_kills}<br>"
+                f"Deaths by Energy (Wolves): {model.deaths_by_energy_wolves}<br>"
+                f"Deaths by Energy (Sheep): {model.deaths_by_energy_sheep}<br>"
+                f"Wolves Killed by Traps: {model.trap_kills}")
+kill_count_element = KillCountElement()
+
+model = EcosystemModel(num_wolves=15, num_sheep=200, num_hunters=5, initial_grass=True, grass_regrowth_time=10)
+
+# Get width and height from model grid
+vis_width = model.grid.width
+vis_height = model.grid.height
+
+# Create the canvas grid
+canvas_element = CanvasGrid(agent_portrayal, vis_width, vis_height, vis_width * 15, vis_height * 15)
+canvas_element_grass = CanvasGrid(grass_portrayal, vis_width, vis_height, vis_width * 10, vis_height * 10)
+# Create the chart module
+chart = ChartModule([{"Label": "Wolves", "Color": "red"},
+                     {"Label": "Sheep", "Color": "green"},
+                     {"Label": "Hunters", "Color": "blue"}],
+                    data_collector_name='datacollector')
+
+# CanvasGrid setup
 
 
-
-model_params = {
-    "width": 50,
-    "height": 50,
-    "initial_grass": True,
-    "grass_regrowth_time": 10,
-}
-model = EcosystemModel(width=50, height=50, initial_grass=True, grass_regrowth_time=10)
-
-
-
-
-# Define the Jupyter visualization
-page = JupyterViz(
+# Set up the server
+server = ModularServer(
     EcosystemModel,
-    model_params,
-    measures=["Sheep", "Wolves", "Hunters","Wolf Kills", "Hunter Kills", "Deaths by Energy" ],  # Measures to be tracked and displayed
-    name="Wolf-Sheep-Hunter Ecosystem",
-    agent_portrayal=agent_portrayal,
+    [canvas_element,canvas_element_grass, chart, kill_count_element],
+    "Wolf-Sheep-Hunter Ecosystem",
+    {"num_wolves": 15,
+     "num_sheep": 150,
+     "num_hunters": 5,
+     "initial_grass": True,
+     "grass_regrowth_time": 10}
 )
 
 
 
-# This line is required to render the visualization in a Jupyter notebook
+server.port = 8511  # Set port for visualization
+
+
+
+server.launch(open_browser=True)
+
