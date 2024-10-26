@@ -23,7 +23,7 @@ The model includes a variety of agents each with specific roles and behaviors:
 
 #### Hunters
 - **Role**: Represent human intervention in wildlife management aiming to control wolf populations.
-- **Behaviors**: Hunters can move around the grid, kill wolves, set traps, and respond to policy changes influenced by public opinion.
+- **Behaviors**: Hunters can move around the grid, track down wolfpacks in their perception radius, kill wolves and respond to policy changes influenced by public opinion.
 - **Parameters**:
   - **Energy and Respawn Mechanics**: Control how long hunters can operate before needing to respawn.
   - **Policy Response**: Hunters adjust their behavior based on the current policy, which can restrict or enhance their hunting capabilities.
