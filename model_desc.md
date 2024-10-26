@@ -34,6 +34,37 @@ Each agent type has parameters that dictate its behavior within the ecosystem:
 - **Reproduction Probability**: The likelihood of wolves reproducing each simulation step, impacting the growth rate of wolf populations.
 - **Energy and Respawn Mechanics for Hunters**: Influence how long hunters can operate before needing recovery, simulating real-world fatigue and resource management.
 
+
+## Policy Dynamics and Their Effects on Hunters
+
+The simulation incorporates a sophisticated policy-making mechanism driven by public opinion, which in turn is influenced by the ongoing interactions and conflicts within the ecosystem. These policies directly affect the capabilities and behaviors of hunters in the simulation, representing real-world wildlife management decisions. Below is a detailed explanation of each policy and its impact on hunter operations.
+
+### Policy Types
+
+1. **Increase Hunter Restrictions**
+   - **Description**: This policy is enacted when public concern about wolf populations is low. The aim is to limit hunter activities to ensure that wolf populations are not unduly diminished, promoting ecological balance.
+   - **Effects on Hunters**:
+     - **Reduced Movement**: Hunters have their movement radius decreased, limiting their ability to cover large areas quickly. This simulates increased regulations or restricted access to certain areas within the simulation grid.
+
+
+2. **Maintain Normal Operations**
+   - **Description**: This default policy is applied when there is a moderate level of public concern. It reflects a balanced approach to wildlife management, allowing hunters to operate without new restrictions but without additional support or capabilities.
+   - **Effects on Hunters**:
+     - **Standard Movement and Activities**: Hunters continue with their predefined parameters for movement. This represents a steady state of wildlife management where existing rules and capabilities are deemed adequate.
+
+3. **Decrease Hunter Restrictions**
+   - **Description**: Activated when there is high public concern regarding wolf activity, possibly due to increased conflicts or perceived threats from wolf populations. This policy allows for more aggressive management tactics to control these populations.
+   - **Effects on Hunters**:
+     - **Increased Movement**: Hunters are allowed to move more freely and cover more ground, simulating an easing of restrictions that might come with heightened concerns about wildlife.
+    
+### Implementation and Feedback Loop
+
+Each policy is implemented based on the current state of public opinion, which is itself influenced by the ongoing dynamics of the ecosystem, particularly the conflict score. As wolves interact with human habitats and livestock, they can either increase or decrease this score, which in turn influences public opinion. Changes in public opinion trigger reassessments of policies, creating a dynamic feedback loop that continuously adapts to the unfolding ecological interactions.
+
+- **Monitoring and Adjustment**: The effects of each policy are monitored through the simulation's data collection mechanisms. Adjustments to policies can be made in response to their observed impacts on the ecosystem, ensuring that the model remains responsive to the needs of both the human and wildlife populations it simulates.
+
+This dynamic policy framework adds a layer of depth to the simulation, allowing users to explore the consequences of different wildlife management strategies and their effectiveness in real-time. By adjusting the model's parameters and observing the resulting changes in hunter behavior and overall ecosystem health, stakeholders can gain insights into the complex interplay of ecological factors and human activities.
+
 ### Simulation Mechanics
 
 #### Conflict Score Dynamics
