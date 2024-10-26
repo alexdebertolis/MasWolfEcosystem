@@ -1,4 +1,4 @@
-# Detailed Ecosystem Simulation Overview
+# Detailed Ecosystem Model Overview
 
 The Ecosystem Simulation, developed using the Mesa framework, models interactions among wolves, hunters, livestock, and human habitats in a dynamic environment influenced by real-world geographic data. This detailed overview focuses on the adjustable parameters and dynamics that allow researchers and policymakers to explore different ecological scenarios effectively.
 
