@@ -41,7 +41,7 @@ The model includes a variety of agents each with specific roles and behaviors:
 - **Influence on Policies**: The conflict score directly influences public opinion, which in turn affects policy decisions.
 
 ### Policy Dynamics
-- **Policy Adjustments**: Based on public opinion, policies can become stricter or more lenient, directly influencing hunter behaviors and indirectly affecting wolf population dynamics.
+- **Policy Adjustments**: Based on public opinion, policies can become stricter or more lenient, directly influencing hunter behaviors and indirectly affecting wolf population dynamics. A log_communication method print a txt file with the xml communication between public - policy maker - hunter.
 
 ### Agent Interactions
 - **Predator-Prey Dynamics**: Wolves hunt livestock, affecting the conflict score and potentially triggering policy changes through shifts in public opinion.
@@ -55,7 +55,7 @@ These parameters can be adjusted to explore different scenarios and outcomes wit
 - **Livestock Ratio**: Changes the initial distribution of livestock across the grid.
 - **Initial Number of Agents**: The starting number of wolves, hunters, and the distribution of human habitats.
 - **Human Density Centers**: Adjusts the number of high-density human population centers, affecting human-wolf interactions.
-- **Perception Radii and Movement Parameters for Agents**: Can be tuned to simulate different behaviors and interaction outcomes.
+- **Perception Radius and Movement Parameters for Agents**: Can be tuned to simulate different behaviors and interaction outcomes.
 
 ### Visualization and Data Collection
 
