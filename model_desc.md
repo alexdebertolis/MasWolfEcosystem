@@ -77,6 +77,16 @@ This dynamic policy framework adds a layer of depth to the simulation, allowing 
 #### Population Management
 - **Wolf Pack Dynamics**: Rules governing when wolf packs split or are culled based on their sizes and interactions with hunters, with parameters defining the thresholds for these actions.
 
+  ### Human Density Dynamics
+
+The simulation integrates a sophisticated human density model to represent the spatial distribution of human populations within the ecosystem. This feature is crucial for mimicking real-world scenarios where wildlife interactions with human populations vary significantly based on the density of human habitation. Here's how human density is modeled and its impact on the ecosystem:
+
+### Representation of Human Density
+
+- **Human Habitat Agents**: Each grid cell may contain a `HumanHabitatAgent` that represents the human population in that area. The density of these agents across the grid mirrors variations in human population density, ranging from urban centers to rural areas.
+- **Density Map Initialization**: Human density is not randomly distributed but is instead initialized based on a set of predefined centers that represent towns or cities. The density decreases as the distance from these centers increases, simulating the typical drop-off in population density seen in real-world urban-rural gradients.
+
+
 ## Visualization and Data Collection
 The simulation uses various modules to visualize and collect data on the ecosystem:
 
