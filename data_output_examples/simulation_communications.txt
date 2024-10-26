@@ -1,4 +1,4 @@
-( inform
+( request
   sender: PM
   receiver: all_hunters
   language: XML
@@ -16,7 +16,7 @@
   timestamp: 2024-10-26 23:25:06
 )
 
-( inform
+( request
   sender: PM
   receiver: all_hunters
   language: XML
@@ -34,7 +34,7 @@
   timestamp: 2024-10-26 23:25:08
 )
 
-( inform
+( request
   sender: PM
   receiver: all_hunters
   language: XML
