@@ -1,0 +1,54 @@
+( inform
+  sender: PM
+  receiver: all_hunters
+  language: XML
+  ontology: Policy Maker Decision
+  content: Policy changed to Increase Hunter Restrictions
+  timestamp: 2024-10-26 23:25:06
+)
+
+( inform
+  sender: PO
+  receiver: PM
+  language: XML
+  ontology: Pubblic Opinion Influence
+  content: State changed to Low Concern
+  timestamp: 2024-10-26 23:25:06
+)
+
+( inform
+  sender: PM
+  receiver: all_hunters
+  language: XML
+  ontology: Policy Maker Decision
+  content: Policy changed to Maintain Normal Operations
+  timestamp: 2024-10-26 23:25:08
+)
+
+( inform
+  sender: PO
+  receiver: PM
+  language: XML
+  ontology: Pubblic Opinion Influence
+  content: State changed to Medium Concern
+  timestamp: 2024-10-26 23:25:08
+)
+
+( inform
+  sender: PM
+  receiver: all_hunters
+  language: XML
+  ontology: Policy Maker Decision
+  content: Policy changed to Decrease Hunter Restrictions
+  timestamp: 2024-10-26 23:25:12
+)
+
+( inform
+  sender: PO
+  receiver: PM
+  language: XML
+  ontology: Pubblic Opinion Influence
+  content: State changed to High Concern
+  timestamp: 2024-10-26 23:25:12
+)
+
