@@ -1,4 +1,4 @@
-# Detailed Overview of the Ecosystem Simulation Model
+# Detailed Overview of the Ecosystem Simulation Structure
 
 The Ecosystem Simulation Model is a complex agent-based model designed to simulate interactions between different agents: wolves, hunters, livestock, human habitats, public opinion, and policy makers within a geographically accurate grid environment. This model explores the dynamics of predator-prey relationships, human-wildlife conflicts, and the impact of policy decisions on these interactions.
 
